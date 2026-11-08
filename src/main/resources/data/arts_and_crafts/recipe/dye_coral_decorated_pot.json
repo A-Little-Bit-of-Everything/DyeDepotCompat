@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "group": "dyed_decorated_pots",
+  "key": {
+    "#": {
+      "item": "arts_and_crafts:pottery_sherd"
+    },
+    "D": {
+      "item": "dye_depot:coral_dye"
+    }
+  },
+  "pattern": [
+    " # ",
+    "#D#",
+    " # "
+  ],
+  "result": {
+    "count": 1,
+    "id": "arts_and_crafts:coral_decorated_pot"
+  }
+}

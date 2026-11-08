@@ -13,7 +13,7 @@ description = '''${mod_description}'''
 [[mixins]]
 config = "${mod_id}.mixins.json"
 
-# ── Required dependencies ─────────────────────────────────────────────────────
+# ── Dependencies ─────────────────────────────────────────────────────────────
 
 [[dependencies."${mod_id}"]]
 modId = "neoforge"
@@ -29,19 +29,26 @@ versionRange = "${minecraft_version_range}"
 ordering = "NONE"
 side = "BOTH"
 
-# Music Disc Maker – the mod that owns the disc-dyeing table.
-# We must load AFTER it so that DiscDye's static initialiser has already run.
-[[dependencies."${mod_id}"]]
-modId = "music_disc_maker"
-type = "required"
-versionRange = "[3.0.0,)"
-ordering = "AFTER"
-side = "BOTH"
-
-# Dye Depot – the mod whose dye items we are adding support for.
+# Dye Depot – the mod whose dye items we are adding support for (required).
 [[dependencies."${mod_id}"]]
 modId = "dye_depot"
 type = "required"
 versionRange = "[2.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+# Music Disc Maker – optional disc-dyeing table support.
+[[dependencies."${mod_id}"]]
+modId = "music_disc_maker"
+type = "optional"
+versionRange = "[3.0.0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+# Arts and Crafts – optional dyed blocks and items support.
+[[dependencies."${mod_id}"]]
+modId = "arts_and_crafts"
+type = "optional"
+versionRange = "[1.5.0,)"
 ordering = "AFTER"
 side = "BOTH"

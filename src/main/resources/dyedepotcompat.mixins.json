@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "net.notaglitch.dyedepotcompat.mixin",
+  "plugin": "net.notaglitch.dyedepotcompat.mixin.DyeDepotCompatMixinPlugin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "DiscDyeingTableBlockEntityMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

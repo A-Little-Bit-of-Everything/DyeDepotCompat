@@ -101,6 +101,9 @@ dependencies {
 
     // Dye Depot – provides the extra dye items we want to support
     compileOnly files(project.dye_depot_jar)
+
+    // Arts and Crafts – provides dyed blocks, chalk, pots, paintbrushes
+    compileOnly files(project.arts_and_crafts_jar)
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
