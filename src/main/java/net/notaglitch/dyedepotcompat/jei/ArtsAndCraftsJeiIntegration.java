@@ -25,10 +25,12 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.ShapelessRecipe;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 public class ArtsAndCraftsJeiIntegration {
 
@@ -91,6 +93,46 @@ public class ArtsAndCraftsJeiIntegration {
     }
 
     private static void registerPaintingRecipes(IRecipeRegistration registration) {
+        List<PaintingRecipe> recipes = new ArrayList<>();
+
+        // 1. Static Arts & Crafts palette recipes (guaranteed to load even if client is not in a world)
+        addPaletteRecipes(recipes, ACBlocks.SOAPSTONE.get(), ACBlocks::getDyedSoapstone);
+        addPaletteRecipes(recipes, ACBlocks.SOAPSTONE_STAIRS.get(), ACBlocks::getDyedSoapstoneStairs);
+        addPaletteRecipes(recipes, ACBlocks.SOAPSTONE_SLAB.get(), ACBlocks::getDyedSoapstoneSlab);
+        addPaletteRecipes(recipes, ACBlocks.SOAPSTONE_WALL.get(), ACBlocks::getDyedSoapstoneWall);
+        addPaletteRecipes(recipes, ACBlocks.POLISHED_SOAPSTONE.get(), ACBlocks::getDyedPolishedSoapstone);
+        addPaletteRecipes(recipes, ACBlocks.POLISHED_SOAPSTONE_STAIRS.get(), ACBlocks::getDyedPolishedSoapstoneStairs);
+        addPaletteRecipes(recipes, ACBlocks.POLISHED_SOAPSTONE_SLAB.get(), ACBlocks::getDyedPolishedSoapstoneSlab);
+        addPaletteRecipes(recipes, ACBlocks.POLISHED_SOAPSTONE_WALL.get(), ACBlocks::getDyedPolishedSoapstoneWall);
+        addPaletteRecipes(recipes, ACBlocks.SOAPSTONE_BRICKS.get(), ACBlocks::getDyedSoapstoneBricks);
+        addPaletteRecipes(recipes, ACBlocks.SOAPSTONE_BRICK_STAIRS.get(), ACBlocks::getDyedSoapstoneBrickStairs);
+        addPaletteRecipes(recipes, ACBlocks.SOAPSTONE_BRICK_SLAB.get(), ACBlocks::getDyedSoapstoneBrickSlab);
+        addPaletteRecipes(recipes, ACBlocks.SOAPSTONE_BRICK_WALL.get(), ACBlocks::getDyedSoapstoneBrickWall);
+
+        // Chalk
+        Block plainChalk = ACBlocks.CHALK.get(-1) != null ? ACBlocks.CHALK.get(-1).get() : null;
+        addPaletteRecipes(recipes, plainChalk, ACBlocks::getChalk);
+
+        // Plaster
+        addPaletteRecipes(recipes, ACBlocks.PLASTER.get(), ACBlocks::getDyedPlaster);
+
+        // Mud Bricks
+        addPaletteRecipes(recipes, Blocks.MUD_BRICKS, ACBlocks::getDyedMudBricks);
+        addPaletteRecipes(recipes, Blocks.MUD_BRICK_STAIRS, ACBlocks::getDyedMudBrickStairs);
+        addPaletteRecipes(recipes, Blocks.MUD_BRICK_SLAB, ACBlocks::getDyedMudBrickSlab);
+        addPaletteRecipes(recipes, Blocks.MUD_BRICK_WALL, ACBlocks::getDyedMudBrickWall);
+
+        // Terracotta Shingles
+        addPaletteRecipes(recipes, ACBlocks.TERRACOTTA_SHINGLES.get(), ACBlocks::getDyedTerracottaShingles);
+        addPaletteRecipes(recipes, ACBlocks.TERRACOTTA_SHINGLE_STAIRS.get(), ACBlocks::getDyedTerracottaShingleStairs);
+        addPaletteRecipes(recipes, ACBlocks.TERRACOTTA_SHINGLE_SLAB.get(), ACBlocks::getDyedTerracottaShingleSlab);
+        addPaletteRecipes(recipes, ACBlocks.TERRACOTTA_SHINGLE_WALL.get(), ACBlocks::getDyedTerracottaShingleWall);
+
+        // Pots
+        addPaletteRecipes(recipes, Blocks.FLOWER_POT, ACBlocks::getDyedFlowerPot);
+        addPaletteRecipes(recipes, Blocks.DECORATED_POT, ACBlocks::getDyedDecoratedPot);
+
+        // 2. Datapack dynamic palettes (if registry is already present)
         RegistryAccess access = null;
         if (Minecraft.getInstance().getConnection() != null) {
             access = Minecraft.getInstance().getConnection().registryAccess();
@@ -98,27 +140,26 @@ public class ArtsAndCraftsJeiIntegration {
             access = Minecraft.getInstance().level.registryAccess();
         }
 
-        if (access == null) return;
+        if (access != null) {
+            Registry<PaintbrushPalette> paletteRegistry = access.registry(ACRegistries.PAINTBRUSH_PALETTE).orElse(null);
+            if (paletteRegistry != null) {
+                for (PaintbrushPalette palette : paletteRegistry) {
+                    List<ItemStack> inputs = new ArrayList<>();
+                    for (Holder<Block> blockHolder : palette.blocks()) {
+                        if (blockHolder.isBound() && blockHolder.value().asItem() != Items.AIR) {
+                            inputs.add(new ItemStack(blockHolder.value()));
+                        }
+                    }
+                    if (inputs.isEmpty()) continue;
 
-        Registry<PaintbrushPalette> paletteRegistry = access.registry(ACRegistries.PAINTBRUSH_PALETTE).orElse(null);
-        if (paletteRegistry == null) return;
-
-        List<PaintingRecipe> recipes = new ArrayList<>();
-        for (PaintbrushPalette palette : paletteRegistry) {
-            List<ItemStack> inputs = new ArrayList<>();
-            for (Holder<Block> blockHolder : palette.blocks()) {
-                if (blockHolder.isBound() && blockHolder.value().asItem() != Items.AIR) {
-                    inputs.add(new ItemStack(blockHolder.value()));
-                }
-            }
-            if (inputs.isEmpty()) continue;
-
-            for (Map.Entry<Holder<Item>, Holder<Block>> entry : palette.mappings().entrySet()) {
-                if (entry.getKey().isBound() && entry.getValue().isBound()) {
-                    ItemStack brush = new ItemStack(entry.getKey().value());
-                    ItemStack output = new ItemStack(entry.getValue().value());
-                    if (brush.getItem() != Items.AIR && output.getItem() != Items.AIR) {
-                        recipes.add(new PaintingRecipe(inputs, brush, output));
+                    for (Map.Entry<Holder<Item>, Holder<Block>> entry : palette.mappings().entrySet()) {
+                        if (entry.getKey().isBound() && entry.getValue().isBound()) {
+                            ItemStack brush = new ItemStack(entry.getKey().value());
+                            ItemStack output = new ItemStack(entry.getValue().value());
+                            if (brush.getItem() != Items.AIR && output.getItem() != Items.AIR) {
+                                recipes.add(new PaintingRecipe(inputs, brush, output));
+                            }
+                        }
                     }
                 }
             }
@@ -129,11 +170,56 @@ public class ArtsAndCraftsJeiIntegration {
         }
     }
 
+    private static void addPaletteRecipes(
+            List<PaintingRecipe> recipes,
+            Block plainBlock,
+            Function<Integer, Block> dyedBlockGetter) {
+        List<ItemStack> allVariants = new ArrayList<>();
+        if (plainBlock != null && plainBlock.asItem() != Items.AIR) {
+            allVariants.add(new ItemStack(plainBlock));
+        }
+
+        for (DyeColor dyeColor : DyeColor.values()) {
+            try {
+                Block dyed = dyedBlockGetter.apply(dyeColor.getId());
+                if (dyed != null && dyed.asItem() != Items.AIR) {
+                    allVariants.add(new ItemStack(dyed));
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+
+        if (allVariants.isEmpty()) return;
+
+        // Recipes for each dye: allVariants + [Dye] Paintbrush -> [Dye] Block
+        for (DyeColor dyeColor : DyeColor.values()) {
+            try {
+                Block dyed = dyedBlockGetter.apply(dyeColor.getId());
+                Item brush = ACItems.getPaintBrush(dyeColor.getId());
+                if (dyed != null && dyed.asItem() != Items.AIR && brush != null && brush != Items.AIR) {
+                    recipes.add(new PaintingRecipe(allVariants, new ItemStack(brush), new ItemStack(dyed)));
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+
+        // Recipe for Bleachdew: allVariants + Bleachdew Paintbrush -> Plain Block
+        if (plainBlock != null && plainBlock.asItem() != Items.AIR) {
+            Item bleachBrush = ACItems.BLEACHDEW_PAINTBRUSH.get();
+            if (bleachBrush != null && bleachBrush != Items.AIR) {
+                recipes.add(new PaintingRecipe(allVariants, new ItemStack(bleachBrush), new ItemStack(plainBlock)));
+            }
+        }
+    }
+
     public static void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
         for (DyeColor dyeColor : DyeColor.values()) {
-            Item brush = ACItems.getPaintBrush(dyeColor.getId());
-            if (brush != null && brush != Items.AIR) {
-                registration.addRecipeCatalysts(PaintingRecipeCategory.TYPE, brush);
+            try {
+                Item brush = ACItems.getPaintBrush(dyeColor.getId());
+                if (brush != null && brush != Items.AIR) {
+                    registration.addRecipeCatalysts(PaintingRecipeCategory.TYPE, brush);
+                }
+            } catch (Throwable ignored) {
             }
         }
         Item bleachdewBrush = ACItems.BLEACHDEW_PAINTBRUSH.get();
