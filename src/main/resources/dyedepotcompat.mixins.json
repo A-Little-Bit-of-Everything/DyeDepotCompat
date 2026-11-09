@@ -9,7 +9,8 @@
     "DyedDecoratedPotBlockMixin"
   ],
   "client": [
-    "ArtsAndCraftsBEWLRMixin"
+    "ArtsAndCraftsBEWLRMixin",
+    "BlockColorsConcurrencyMixin"
   ],
   "injectors": {
     "defaultRequire": 1
