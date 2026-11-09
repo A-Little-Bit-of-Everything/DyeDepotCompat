@@ -104,6 +104,12 @@ dependencies {
 
     // Arts and Crafts – provides dyed blocks, chalk, pots, paintbrushes
     compileOnly files(project.arts_and_crafts_jar)
+
+    // JinxedLib – required by Arts and Crafts for creative category utils
+    compileOnly files(project.jinxedlib_jar)
+
+    // JEI – Just Enough Items API
+    compileOnly files(project.jei_jar)
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.

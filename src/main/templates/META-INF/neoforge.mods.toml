@@ -52,3 +52,11 @@ type = "optional"
 versionRange = "[1.5.0,)"
 ordering = "AFTER"
 side = "BOTH"
+
+# JEI – optional recipe viewer support.
+[[dependencies."${mod_id}"]]
+modId = "jei"
+type = "optional"
+versionRange = "[19.0.0,)"
+ordering = "AFTER"
+side = "BOTH"

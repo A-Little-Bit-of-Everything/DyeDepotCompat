@@ -5,7 +5,11 @@
   "plugin": "net.notaglitch.dyedepotcompat.mixin.DyeDepotCompatMixinPlugin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "DiscDyeingTableBlockEntityMixin"
+    "DiscDyeingTableBlockEntityMixin",
+    "DyedDecoratedPotBlockMixin"
+  ],
+  "client": [
+    "ArtsAndCraftsBEWLRMixin"
   ],
   "injectors": {
     "defaultRequire": 1

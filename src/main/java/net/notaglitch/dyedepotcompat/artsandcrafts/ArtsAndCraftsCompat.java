@@ -5,6 +5,7 @@ import com.kekecreations.arts_and_crafts.common.item.DyedDecoratedPotBlockItem;
 import com.kekecreations.arts_and_crafts.core.registry.ACBlocks;
 import com.kekecreations.arts_and_crafts.core.registry.ACItems;
 import com.kekecreations.arts_and_crafts.core.registry.ACTabs;
+import com.kekecreations.jinxedlib.core.util.JinxedCreativeCategoryUtils;
 import com.mojang.logging.LogUtils;
 import com.ninni.dye_depot.registry.DDDyes;
 import net.minecraft.core.registries.Registries;
@@ -13,6 +14,7 @@ import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -28,13 +30,8 @@ import java.util.function.Supplier;
 /**
  * Arts & Crafts compatibility module.
  *
- * <p>Arts & Crafts already iterates over {@code DyeColor.values()} to register dyed plaster,
- * mud bricks, terracotta shingles, soapstone, chalk, flower pots, paintbrushes, etc.,
- * but explicitly skips decorated pots for dye IDs > 15 (which excludes Dye Depot's colors).
- *
- * <p>Here we register the missing decorated pots under the {@code arts_and_crafts} namespace
- * and populate Arts & Crafts' internal maps so that all tools, paintbrush palettes, and recipes
- * seamlessly recognize them.
+ * <p>Registers missing decorated pots, populates creative mode tabs (ensuring all Dye Depot
+ * variants appear in the creative search and JEI), and seeds JinxedLib's color order.
  */
 public class ArtsAndCraftsCompat {
 
@@ -44,6 +41,20 @@ public class ArtsAndCraftsCompat {
     public static final Map<DyeColor, Supplier<Item>> DECORATED_POT_ITEMS = new HashMap<>();
 
     public static void init(IEventBus modEventBus) {
+        try {
+            for (DDDyes ddDye : DDDyes.values()) {
+                DyeColor dyeColor = ddDye.get();
+                if (!JinxedCreativeCategoryUtils.colourOrder.contains(dyeColor)) {
+                    JinxedCreativeCategoryUtils.colourOrder.add(dyeColor);
+                }
+                if (!JinxedCreativeCategoryUtils.colourOrderBackToFront.contains(dyeColor)) {
+                    JinxedCreativeCategoryUtils.colourOrderBackToFront.add(dyeColor);
+                }
+            }
+        } catch (Throwable t) {
+            LOGGER.warn("[DyeDepotCompat] Could not populate JinxedCreativeCategoryUtils: {}", t.getMessage());
+        }
+
         modEventBus.addListener(ArtsAndCraftsCompat::onRegister);
         modEventBus.addListener(ArtsAndCraftsCompat::onBuildCreativeTab);
     }
@@ -80,13 +91,64 @@ public class ArtsAndCraftsCompat {
         }
     }
 
+    private static void accept(BuildCreativeModeTabContentsEvent event, ItemLike itemLike) {
+        if (itemLike != null && itemLike.asItem() != null && itemLike.asItem() != net.minecraft.world.item.Items.AIR) {
+            event.accept(new ItemStack(itemLike));
+        }
+    }
+
     private static void onBuildCreativeTab(BuildCreativeModeTabContentsEvent event) {
-        if (event.getTabKey().equals(CreativeModeTabs.FUNCTIONAL_BLOCKS)
-                || (ACTabs.EXAMPLE_TAB != null && event.getTab().equals(ACTabs.EXAMPLE_TAB.get()))) {
-            for (Supplier<Item> itemSupplier : DECORATED_POT_ITEMS.values()) {
-                Item item = itemSupplier.get();
-                if (item != null) {
-                    event.accept(new ItemStack(item));
+        boolean isExampleTab = ACTabs.EXAMPLE_TAB != null && event.getTab().equals(ACTabs.EXAMPLE_TAB.get());
+        boolean isBuildingBlocks = event.getTabKey().equals(CreativeModeTabs.BUILDING_BLOCKS);
+        boolean isColoredBlocks = event.getTabKey().equals(CreativeModeTabs.COLORED_BLOCKS);
+        boolean isTools = event.getTabKey().equals(CreativeModeTabs.TOOLS_AND_UTILITIES);
+        boolean isFunctional = event.getTabKey().equals(CreativeModeTabs.FUNCTIONAL_BLOCKS);
+
+        if (isExampleTab || isBuildingBlocks || isColoredBlocks || isTools || isFunctional) {
+            for (DDDyes ddDye : DDDyes.values()) {
+                int id = ddDye.get().getId();
+                DyeColor dyeColor = ddDye.get();
+
+                if (isExampleTab || isBuildingBlocks || isColoredBlocks) {
+                    accept(event, ACBlocks.getDyedPlaster(id));
+                    accept(event, ACBlocks.getDyedMudBricks(id));
+                    accept(event, ACBlocks.getDyedMudBrickStairs(id));
+                    accept(event, ACBlocks.getDyedMudBrickSlab(id));
+                    accept(event, ACBlocks.getDyedMudBrickWall(id));
+                    accept(event, ACBlocks.getDyedTerracottaShingles(id));
+                    accept(event, ACBlocks.getDyedTerracottaShingleStairs(id));
+                    accept(event, ACBlocks.getDyedTerracottaShingleSlab(id));
+                    accept(event, ACBlocks.getDyedTerracottaShingleWall(id));
+                    accept(event, ACBlocks.getDyedSoapstone(id));
+                    accept(event, ACBlocks.getDyedSoapstoneStairs(id));
+                    accept(event, ACBlocks.getDyedSoapstoneSlab(id));
+                    accept(event, ACBlocks.getDyedSoapstoneWall(id));
+                    accept(event, ACBlocks.getDyedPolishedSoapstone(id));
+                    accept(event, ACBlocks.getDyedPolishedSoapstoneStairs(id));
+                    accept(event, ACBlocks.getDyedPolishedSoapstoneSlab(id));
+                    accept(event, ACBlocks.getDyedPolishedSoapstoneWall(id));
+                    accept(event, ACBlocks.getDyedSoapstoneBricks(id));
+                    accept(event, ACBlocks.getDyedSoapstoneBrickStairs(id));
+                    accept(event, ACBlocks.getDyedSoapstoneBrickSlab(id));
+                    accept(event, ACBlocks.getDyedSoapstoneBrickWall(id));
+                }
+
+                if (isExampleTab || isColoredBlocks) {
+                    accept(event, ACBlocks.getChalk(id));
+                    accept(event, ACBlocks.getChalkDust(id));
+                }
+
+                if (isExampleTab || isTools) {
+                    accept(event, ACItems.getChalkStick(id));
+                    accept(event, ACItems.getPaintBrush(id));
+                }
+
+                if (isExampleTab || isFunctional) {
+                    accept(event, ACBlocks.getDyedFlowerPot(id));
+                    Supplier<Item> potSupplier = DECORATED_POT_ITEMS.get(dyeColor);
+                    if (potSupplier != null) {
+                        accept(event, potSupplier.get());
+                    }
                 }
             }
         }

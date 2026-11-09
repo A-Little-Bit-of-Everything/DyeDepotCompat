@@ -23,6 +23,10 @@ public class DyeDepotCompatMixinPlugin implements IMixinConfigPlugin {
         if (mixinClassName.endsWith("DiscDyeingTableBlockEntityMixin")) {
             return isModLoaded("music_disc_maker");
         }
+        if (mixinClassName.endsWith("DyedDecoratedPotBlockMixin")
+                || mixinClassName.endsWith("ArtsAndCraftsBEWLRMixin")) {
+            return isModLoaded("arts_and_crafts");
+        }
         return true;
     }
 
